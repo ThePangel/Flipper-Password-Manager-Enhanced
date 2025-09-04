@@ -11,5 +11,5 @@ App(
     fap_description="A simple password manager that paste your passwords and uses csv files for better managment",
     fap_author="ThePangel",
     fap_weburl="https://github.com/ThePangel/Flipper-Password-Manager",
-    # fap_icon_assets="images",  # Image assets to compile for this application
+    fap_icon_assets="images",  # Image assets to compile for this application
 )
