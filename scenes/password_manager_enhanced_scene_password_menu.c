@@ -49,6 +49,10 @@ bool password_manager_enhanced_scene_password_menu_on_event(void* context, Scene
             break;
         }
         break;
+    case SceneManagerEventTypeBack:
+        scene_manager_next_scene(app->scene_manager, AppScene_Submenu);
+        consumed = true;
+        break;
     default:
         consumed = false;
         break;

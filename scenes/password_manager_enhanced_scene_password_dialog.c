@@ -32,7 +32,12 @@ bool password_manager_enhanced_scene_password_dialog_on_event(
                 usb_hid_paste(str);
 
             break;
+            consumed = true;
         }
+        break;
+    case SceneManagerEventTypeBack:
+        scene_manager_next_scene(app->scene_manager, AppScene_password_menu);
+        consumed = true;
         break;
     default:
         consumed = false;
@@ -48,7 +53,7 @@ void password_manager_enhanced_scene_password_dialog_on_enter(void* context) {
     dialog_ex_set_header(app->dialog, "Password:", 64, 16, AlignCenter, AlignCenter);
     dialog_ex_set_text(
         app->dialog, app->entry[app->entry_index].password, 64, 32, AlignCenter, AlignCenter);
-    dialog_ex_set_left_button_text(app->dialog, "Back");
+    dialog_ex_set_left_button_text(app->dialog, "User");
     dialog_ex_set_center_button_text(app->dialog, "Paste");
 
     dialog_ex_set_context(app->dialog, app);

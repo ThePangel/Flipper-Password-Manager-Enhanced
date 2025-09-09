@@ -37,6 +37,9 @@ bool password_manager_enhanced_scene_username_dialog_on_event(
             break;
         }
         break;
+    case SceneManagerEventTypeBack:
+        scene_manager_next_scene(app->scene_manager, AppScene_password_menu);
+        break;
     default:
         consumed = false;
         break;
