@@ -1,0 +1,7 @@
+ADD_SCENE(password_manager_enhanced, main_menu, AppScene_MainMenu)
+ADD_SCENE(password_manager_enhanced, sub_menu, AppScene_Submenu)
+ADD_SCENE(password_manager_enhanced, loading_screen, AppScene_loading)
+ADD_SCENE(password_manager_enhanced, password_menu, AppScene_password_menu)
+ADD_SCENE(password_manager_enhanced, options, AppScene_options)
+ADD_SCENE(password_manager_enhanced, username_dialog, AppScene_username_dialog)
+ADD_SCENE(password_manager_enhanced, password_dialog, AppScene_password_dialog)
