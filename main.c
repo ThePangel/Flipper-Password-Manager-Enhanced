@@ -4,17 +4,20 @@
 #include <string.h>
 #include <stdlib.h>
 
-void usb_hid_paste(char* str) {
+void usb_hid_paste(void* context, char* str) {
+    AppContext* app = context;
     furi_hal_usb_enable();
     furi_hal_usb_unlock();
 
     furi_check(furi_hal_usb_set_config(&usb_hid, NULL));
     furi_delay_ms(300);
     for(size_t i = 0; i < strlen(str); i++) {
-        furi_hal_hid_kb_press(USB_ASCII_TO_KEY(str[i]));
-        furi_hal_hid_kb_release(USB_ASCII_TO_KEY(str[i]));
+        furi_hal_hid_kb_press(USB_ASCII_TO_KEY(app, str[i]));
+        furi_hal_hid_kb_release(USB_ASCII_TO_KEY(app, str[i]));
         furi_delay_ms(15);
     }
+    furi_hal_usb_set_config(&usb_cdc_single, NULL);
+    furi_hal_usb_lock();
 }
 
 void ble_hid_paste(void* context, char* str) {
@@ -23,8 +26,8 @@ void ble_hid_paste(void* context, char* str) {
     furi_delay_ms(300);
 
     for(size_t i = 0; i < strlen(str); i++) {
-        ble_profile_hid_kb_press(app->ble, USB_ASCII_TO_KEY(str[i]));
-        ble_profile_hid_kb_release(app->ble, USB_ASCII_TO_KEY(str[i]));
+        ble_profile_hid_kb_press(app->ble, USB_ASCII_TO_KEY(app, str[i]));
+        ble_profile_hid_kb_release(app->ble, USB_ASCII_TO_KEY(app, str[i]));
 
         furi_delay_ms(15);
     }
@@ -162,10 +165,11 @@ static bool password_manager_enhanced_input_back_event_callback(void* context) {
 
 AppContext* app_alloc() {
     AppContext* app = malloc(sizeof(AppContext));
+
     app->bt = furi_record_open(RECORD_BT);
     app->scene_manager = scene_manager_alloc(&password_manager_enhanced_input_scene_handlers, app);
     app->view_dispatcher = view_dispatcher_alloc();
-    app->using_ble = false;
+
     view_dispatcher_set_event_callback_context(app->view_dispatcher, app);
     view_dispatcher_set_custom_event_callback(
         app->view_dispatcher, password_manager_enhanced_input_custom_event_callback);
@@ -192,6 +196,50 @@ AppContext* app_alloc() {
 
     app->dialogs = furi_record_open(RECORD_DIALOGS);
     Storage* storage = furi_record_open(RECORD_STORAGE);
+    if(!storage_file_exists(storage, OPT_LOAD_PATH)) {
+        File* file = storage_file_alloc(storage);
+        if(storage_file_open(file, OPT_LOAD_PATH, FSAM_WRITE, FSOM_CREATE_NEW)) {
+            char buff[64];
+            strcpy(buff, "0\nen-US.kl");
+            storage_file_write(file, buff, strlen(buff));
+            storage_file_close(file);
+            storage_file_free(file);
+            app->using_ble = false;
+        }
+    } else {
+        File* file = storage_file_alloc(storage);
+        if(storage_file_open(file, OPT_LOAD_PATH, FSAM_READ, FSOM_OPEN_EXISTING)) {
+            char ch;
+            storage_file_read(file, &ch, 1);
+            if(ch == '0') {
+                app->using_ble = false;
+                storage_file_seek(file, 1, false);
+            } else if(ch == '1') {
+                app->using_ble = true;
+                storage_file_seek(file, 1, false);
+            }
+            char buff[64] = {0};
+            size_t buff_pos = 0;
+            while(storage_file_read(file, &ch, 1)) {
+                buff[buff_pos++] = ch;
+            }
+            storage_file_close(file);
+            storage_file_free(file);
+            buff[buff_pos] = '\0';
+            File* kb_file = storage_file_alloc(storage);
+            char kb_path[sizeof(buff) + 64];
+
+            snprintf(kb_path, sizeof(kb_path), "%s%s", KBL_LOAD_PATH, buff);
+            if(storage_file_open(kb_file, kb_path, FSAM_READ, FSOM_OPEN_EXISTING)) {
+                uint16_t layout[128];
+                if(storage_file_read(kb_file, layout, sizeof(layout)) == sizeof(layout)) {
+                    memcpy(app->kbl, layout, sizeof(layout));
+                }
+            }
+            storage_file_close(kb_file);
+            storage_file_free(kb_file);
+        }
+    }
     storage_common_mkdir(storage, CSV_LOAD_PATH);
     furi_record_close(RECORD_STORAGE);
     app->file_path = furi_string_alloc();

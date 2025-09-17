@@ -29,7 +29,7 @@ bool password_manager_enhanced_scene_password_dialog_on_event(
             if(app->using_ble)
                 ble_hid_paste(app, str);
             else
-                usb_hid_paste(str);
+                usb_hid_paste(app, str);
 
             break;
             consumed = true;

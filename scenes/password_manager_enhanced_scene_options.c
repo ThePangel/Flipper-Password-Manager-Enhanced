@@ -12,12 +12,33 @@ void password_manager_enhanced_scene_options_callback(void* context, uint32_t in
     }
 }
 
+void password_manager_enhanced_scene_options_callback_conection(VariableItem* item) {
+    AppContext* app = variable_item_get_context(item);
+    if(app->using_ble) {
+        variable_item_set_current_value_text(item, "USB");
+        app->using_ble = false;
+    } else {
+        variable_item_set_current_value_text(item, "BLE");
+        app->using_ble = true;
+    }
+}
+
 void password_manager_enhanced_scene_options_on_enter(void* context) {
     AppContext* app = context;
     variable_item_list_reset(app->options);
-    VariableItem* bluetooth = variable_item_list_add(app->options, "Bluetooth", 2, NULL, app);
+    VariableItem* bluetooth = variable_item_list_add(
+        app->options,
+        "Connection",
+        2,
+        password_manager_enhanced_scene_options_callback_conection,
+        app);
     VariableItem* set_kbl = variable_item_list_add(app->options, "Keyboard Layout", 1, NULL, app);
-    UNUSED(bluetooth);
+    if(app->using_ble) {
+        variable_item_set_current_value_text(bluetooth, "BLE");
+    } else {
+        variable_item_set_current_value_text(bluetooth, "USB");
+    }
+
     UNUSED(set_kbl);
     variable_item_list_set_enter_callback(
         app->options, password_manager_enhanced_scene_options_callback, app);

@@ -40,10 +40,10 @@ bool password_manager_enhanced_scene_password_menu_on_event(void* context, Scene
                 ble_profile_hid_kb_release(app->ble, HID_KEYBOARD_TAB);
                 ble_hid_paste(app, pass);
             } else {
-                usb_hid_paste(user);
+                usb_hid_paste(app, user);
                 furi_hal_hid_kb_press(HID_KEYBOARD_TAB);
                 furi_hal_hid_kb_release(HID_KEYBOARD_TAB);
-                usb_hid_paste(pass);
+                usb_hid_paste(app, pass);
             }
             consumed = true;
             break;

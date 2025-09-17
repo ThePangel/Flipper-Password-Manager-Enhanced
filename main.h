@@ -21,6 +21,7 @@
 #include "password_manager_enhanced_icons.h"
 
 #define CSV_LOAD_PATH            APP_DATA_PATH("")
+#define OPT_LOAD_PATH            APP_DATA_PATH("config.settings")
 #define KBL_LOAD_PATH            APP_ASSETS_PATH("")
 #define HID_BT_KEYS_STORAGE_NAME ".bt_hid.keys"
 
@@ -60,6 +61,7 @@ typedef struct {
     bool using_ble;
     size_t entry_count;
     uint16_t entry_index;
+    uint16_t kbl[128];
 
 } AppContext;
 
@@ -81,8 +83,8 @@ typedef enum {
 
 } AppEvent;
 
-#define USB_ASCII_TO_KEY(x) (((uint8_t)x < 128) ? (hid_asciimap[(uint8_t)x]) : HID_KEYBOARD_NONE)
+#define USB_ASCII_TO_KEY(app, x) (((uint8_t)x < 128) ? (app->kbl[(uint8_t)x]) : HID_KEYBOARD_NONE)
 
 void ble_hid_paste(void* context, char* str);
-void usb_hid_paste(char* str);
+void usb_hid_paste(void* context, char* str);
 void password_manager_enhanced_handle_csv(void* context);
