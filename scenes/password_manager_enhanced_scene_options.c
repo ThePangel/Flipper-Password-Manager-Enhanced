@@ -16,10 +16,12 @@ void password_manager_enhanced_scene_options_callback_conection(VariableItem* it
     AppContext* app = variable_item_get_context(item);
     if(app->using_ble) {
         variable_item_set_current_value_text(item, "USB");
-        app->using_ble = false;
+
+        view_dispatcher_send_custom_event(app->view_dispatcher, AppEvent_ChangeSettings);
     } else {
         variable_item_set_current_value_text(item, "BLE");
-        app->using_ble = true;
+
+        view_dispatcher_send_custom_event(app->view_dispatcher, AppEvent_ChangeSettings);
     }
 }
 
@@ -63,9 +65,32 @@ bool password_manager_enhanced_scene_options_on_event(void* context, SceneManage
                 scene_manager_next_scene(app->scene_manager, AppScene_options);
             }
             break;
+
+        case AppEvent_ChangeSettings:
+            Storage* storage = furi_record_open(RECORD_STORAGE);
+            File* file = storage_file_alloc(storage);
+            if(app->using_ble) {
+                app->using_ble = false;
+                if(storage_file_open(file, OPT_LOAD_PATH, FSAM_WRITE, FSOM_OPEN_EXISTING)) {
+                    char ch = '0';
+
+                    storage_file_write(file, &ch, 1);
+                }
+
+            } else {
+                app->using_ble = true;
+                if(storage_file_open(file, OPT_LOAD_PATH, FSAM_WRITE, FSOM_OPEN_EXISTING)) {
+                    char ch = '1';
+
+                    storage_file_write(file, &ch, 1);
+                }
+            }
+            storage_file_close(file);
+            storage_file_free(file);
+            furi_record_close(RECORD_STORAGE);
+            break;
         }
         break;
-
     default:
         consumed = false;
         break;

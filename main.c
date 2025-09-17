@@ -202,10 +202,11 @@ AppContext* app_alloc() {
             char buff[64];
             strcpy(buff, "0\nen-US.kl");
             storage_file_write(file, buff, strlen(buff));
-            storage_file_close(file);
-            storage_file_free(file);
+
             app->using_ble = false;
         }
+        storage_file_close(file);
+        storage_file_free(file);
     } else {
         File* file = storage_file_alloc(storage);
         if(storage_file_open(file, OPT_LOAD_PATH, FSAM_READ, FSOM_OPEN_EXISTING)) {

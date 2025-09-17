@@ -80,6 +80,7 @@ typedef enum {
     AppEvent_PasteUser,
     AppEvent_PastePasswrd,
     AppEvent_PasteAll,
+    AppEvent_ChangeSettings,
 
 } AppEvent;
 
