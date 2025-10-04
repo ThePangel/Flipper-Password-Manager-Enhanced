@@ -59,10 +59,39 @@ bool password_manager_enhanced_scene_options_on_event(void* context, SceneManage
             browser_options.hide_dot_files = true;
             browser_options.hide_ext = false;
             browser_options.base_path = KBL_LOAD_PATH;
-            furi_string_set(app->file_path, browser_options.base_path);
-            if(dialog_file_browser_show(
-                   app->dialogs, app->file_path, app->file_path, &browser_options)) {
-                scene_manager_next_scene(app->scene_manager, AppScene_options);
+            FuriString* path = furi_string_alloc();
+            furi_string_set(path, browser_options.base_path);
+
+            if(dialog_file_browser_show(app->dialogs, path, path, &browser_options)) {
+                furi_string_right(
+                    path, furi_string_search_rchar(path, '/', 0) + 1
+
+                );
+                Storage* storage = furi_record_open(RECORD_STORAGE);
+                File* file = storage_file_alloc(storage);
+                if(storage_file_open(file, OPT_LOAD_PATH, FSAM_WRITE, FSOM_OPEN_EXISTING)) {
+                    const char* path_str = furi_string_get_cstr(path);
+                    storage_file_seek(file, 2, true);
+                    storage_file_write(file, path_str, sizeof(path_str));
+                    //storage_file_write(file, "\n\0", 3);
+                }
+                storage_file_close(file);
+                storage_file_free(file);
+
+                File* kb_file = storage_file_alloc(storage);
+                char kb_path[sizeof(furi_string_get_cstr(path)) + 64];
+                snprintf(
+                    kb_path, sizeof(kb_path), "%s%s", KBL_LOAD_PATH, furi_string_get_cstr(path));
+                FURI_LOG_I("gang", kb_path);
+                if(storage_file_open(kb_file, kb_path, FSAM_READ, FSOM_OPEN_EXISTING)) {
+                    uint16_t layout[128];
+                    if(storage_file_read(kb_file, layout, sizeof(layout)) == sizeof(layout)) {
+                        memcpy(app->kbl, layout, sizeof(layout));
+                    }
+                }
+                storage_file_close(kb_file);
+                storage_file_free(kb_file);
+                furi_record_close(RECORD_STORAGE);
             }
             break;
 
